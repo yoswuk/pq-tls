@@ -1,0 +1,266 @@
+From 78fc9c217bce0b4e792e5ac2c7260f13a6b4570f Mon Sep 17 00:00:00 2001
+From: yoswuk <yoswuk@korea.ac.kr>
+Date: Mon, 25 May 2026 23:12:00 +0900
+Subject: [PATCH] Add SLH-DSA TLS signature schemes
+
+---
+ include/internal/tlssigalgs.h                 | 24 +++++++++++
+ providers/common/capabilities.c               | 41 ++++++++++++++++++-
+ ssl/t1_lib.c                                  | 13 ++++++
+ ssl/t1_trce.c                                 | 12 ++++++
+ .../75-test_quicapi_data/ssltraceref-zlib.txt | 12 ++++++
+ .../75-test_quicapi_data/ssltraceref.txt      | 12 ++++++
+ .../90-test_sslapi_data/ssltraceref-zlib.txt  | 12 ++++++
+ .../90-test_sslapi_data/ssltraceref.txt       | 12 ++++++
+ 8 files changed, 137 insertions(+), 1 deletion(-)
+
+diff --git a/include/internal/tlssigalgs.h b/include/internal/tlssigalgs.h
+index 1d6c9df49f..7509d313b0 100644
+--- a/include/internal/tlssigalgs.h
++++ b/include/internal/tlssigalgs.h
+@@ -48,6 +48,18 @@
+ #define TLSEXT_SIGALG_mldsa44 0x0904
+ #define TLSEXT_SIGALG_mldsa65 0x0905
+ #define TLSEXT_SIGALG_mldsa87 0x0906
++#define TLSEXT_SIGALG_slhdsa_sha2_128s 0x0911
++#define TLSEXT_SIGALG_slhdsa_sha2_128f 0x0912
++#define TLSEXT_SIGALG_slhdsa_sha2_192s 0x0913
++#define TLSEXT_SIGALG_slhdsa_sha2_192f 0x0914
++#define TLSEXT_SIGALG_slhdsa_sha2_256s 0x0915
++#define TLSEXT_SIGALG_slhdsa_sha2_256f 0x0916
++#define TLSEXT_SIGALG_slhdsa_shake_128s 0x0917
++#define TLSEXT_SIGALG_slhdsa_shake_128f 0x0918
++#define TLSEXT_SIGALG_slhdsa_shake_192s 0x0919
++#define TLSEXT_SIGALG_slhdsa_shake_192f 0x091a
++#define TLSEXT_SIGALG_slhdsa_shake_256s 0x091b
++#define TLSEXT_SIGALG_slhdsa_shake_256f 0x091c
+ 
+ /* Sigalgs names */
+ #define TLSEXT_SIGALG_ecdsa_secp256r1_sha256_name "ecdsa_secp256r1_sha256"
+@@ -91,5 +103,17 @@
+ #define TLSEXT_SIGALG_mldsa44_name "mldsa44"
+ #define TLSEXT_SIGALG_mldsa65_name "mldsa65"
+ #define TLSEXT_SIGALG_mldsa87_name "mldsa87"
++#define TLSEXT_SIGALG_slhdsa_sha2_128s_name "slhdsa_sha2_128s"
++#define TLSEXT_SIGALG_slhdsa_sha2_128f_name "slhdsa_sha2_128f"
++#define TLSEXT_SIGALG_slhdsa_sha2_192s_name "slhdsa_sha2_192s"
++#define TLSEXT_SIGALG_slhdsa_sha2_192f_name "slhdsa_sha2_192f"
++#define TLSEXT_SIGALG_slhdsa_sha2_256s_name "slhdsa_sha2_256s"
++#define TLSEXT_SIGALG_slhdsa_sha2_256f_name "slhdsa_sha2_256f"
++#define TLSEXT_SIGALG_slhdsa_shake_128s_name "slhdsa_shake_128s"
++#define TLSEXT_SIGALG_slhdsa_shake_128f_name "slhdsa_shake_128f"
++#define TLSEXT_SIGALG_slhdsa_shake_192s_name "slhdsa_shake_192s"
++#define TLSEXT_SIGALG_slhdsa_shake_192f_name "slhdsa_shake_192f"
++#define TLSEXT_SIGALG_slhdsa_shake_256s_name "slhdsa_shake_256s"
++#define TLSEXT_SIGALG_slhdsa_shake_256f_name "slhdsa_shake_256f"
+ 
+ #endif
+diff --git a/providers/common/capabilities.c b/providers/common/capabilities.c
+index b97d4d6bcd..bd80499f74 100644
+--- a/providers/common/capabilities.c
++++ b/providers/common/capabilities.c
+@@ -282,6 +282,7 @@ static int tls_group_capability(OSSL_CALLBACK *cb, void *arg)
+ /* --------------------------------------------------------------- */
+ 
+ #if !defined(OPENSSL_NO_ML_DSA) \
++    || !defined(OPENSSL_NO_SLH_DSA) \
+     || (!defined(FIPS_MODULE) && !defined(OPENSSL_NO_SM2) && !defined(OPENSSL_NO_SM3))
+ 
+ typedef struct tls_sigalg_constants_st {
+@@ -297,6 +298,18 @@ static const TLS_SIGALG_CONSTANTS sigalg_constants_list[] = {
+     { TLSEXT_SIGALG_mldsa44, 128, TLS1_3_VERSION, 0, -1, -1 },
+     { TLSEXT_SIGALG_mldsa65, 192, TLS1_3_VERSION, 0, -1, -1 },
+     { TLSEXT_SIGALG_mldsa87, 256, TLS1_3_VERSION, 0, -1, -1 },
++    { TLSEXT_SIGALG_slhdsa_sha2_128s, 128, TLS1_3_VERSION, 0, -1, -1 },
++    { TLSEXT_SIGALG_slhdsa_sha2_128f, 128, TLS1_3_VERSION, 0, -1, -1 },
++    { TLSEXT_SIGALG_slhdsa_sha2_192s, 192, TLS1_3_VERSION, 0, -1, -1 },
++    { TLSEXT_SIGALG_slhdsa_sha2_192f, 192, TLS1_3_VERSION, 0, -1, -1 },
++    { TLSEXT_SIGALG_slhdsa_sha2_256s, 256, TLS1_3_VERSION, 0, -1, -1 },
++    { TLSEXT_SIGALG_slhdsa_sha2_256f, 256, TLS1_3_VERSION, 0, -1, -1 },
++    { TLSEXT_SIGALG_slhdsa_shake_128s, 128, TLS1_3_VERSION, 0, -1, -1 },
++    { TLSEXT_SIGALG_slhdsa_shake_128f, 128, TLS1_3_VERSION, 0, -1, -1 },
++    { TLSEXT_SIGALG_slhdsa_shake_192s, 192, TLS1_3_VERSION, 0, -1, -1 },
++    { TLSEXT_SIGALG_slhdsa_shake_192f, 192, TLS1_3_VERSION, 0, -1, -1 },
++    { TLSEXT_SIGALG_slhdsa_shake_256s, 256, TLS1_3_VERSION, 0, -1, -1 },
++    { TLSEXT_SIGALG_slhdsa_shake_256f, 256, TLS1_3_VERSION, 0, -1, -1 },
+     { TLSEXT_SIGALG_sm2sig_sm3, 128, TLS1_3_VERSION, 0, -1, -1 },
+ };
+ 
+@@ -329,8 +342,34 @@ static const OSSL_PARAM param_sigalg_list[][10] = {
+     TLS_SIGALG_ENTRY("mldsa65", "ML-DSA-65", "2.16.840.1.101.3.4.3.18", 1),
+     TLS_SIGALG_ENTRY("mldsa87", "ML-DSA-87", "2.16.840.1.101.3.4.3.19", 2),
+ #endif
++#ifndef OPENSSL_NO_SLH_DSA
++    TLS_SIGALG_ENTRY("slhdsa_sha2_128s", "SLH-DSA-SHA2-128s",
++                     "2.16.840.1.101.3.4.3.20", 3),
++    TLS_SIGALG_ENTRY("slhdsa_sha2_128f", "SLH-DSA-SHA2-128f",
++                     "2.16.840.1.101.3.4.3.21", 4),
++    TLS_SIGALG_ENTRY("slhdsa_sha2_192s", "SLH-DSA-SHA2-192s",
++                     "2.16.840.1.101.3.4.3.22", 5),
++    TLS_SIGALG_ENTRY("slhdsa_sha2_192f", "SLH-DSA-SHA2-192f",
++                     "2.16.840.1.101.3.4.3.23", 6),
++    TLS_SIGALG_ENTRY("slhdsa_sha2_256s", "SLH-DSA-SHA2-256s",
++                     "2.16.840.1.101.3.4.3.24", 7),
++    TLS_SIGALG_ENTRY("slhdsa_sha2_256f", "SLH-DSA-SHA2-256f",
++                     "2.16.840.1.101.3.4.3.25", 8),
++    TLS_SIGALG_ENTRY("slhdsa_shake_128s", "SLH-DSA-SHAKE-128s",
++                     "2.16.840.1.101.3.4.3.26", 9),
++    TLS_SIGALG_ENTRY("slhdsa_shake_128f", "SLH-DSA-SHAKE-128f",
++                     "2.16.840.1.101.3.4.3.27", 10),
++    TLS_SIGALG_ENTRY("slhdsa_shake_192s", "SLH-DSA-SHAKE-192s",
++                     "2.16.840.1.101.3.4.3.28", 11),
++    TLS_SIGALG_ENTRY("slhdsa_shake_192f", "SLH-DSA-SHAKE-192f",
++                     "2.16.840.1.101.3.4.3.29", 12),
++    TLS_SIGALG_ENTRY("slhdsa_shake_256s", "SLH-DSA-SHAKE-256s",
++                     "2.16.840.1.101.3.4.3.30", 13),
++    TLS_SIGALG_ENTRY("slhdsa_shake_256f", "SLH-DSA-SHAKE-256f",
++                     "2.16.840.1.101.3.4.3.31", 14),
++#endif
+ #if !defined(FIPS_MODULE) && !defined(OPENSSL_NO_SM2) && !defined(OPENSSL_NO_SM3)
+-    TLS_SIGALG_ENTRY("sm2sig_sm3", "SM2", "1.2.156.10197.1 501", 3),
++    TLS_SIGALG_ENTRY("sm2sig_sm3", "SM2", "1.2.156.10197.1 501", 15),
+ #endif
+ };
+ #endif
+diff --git a/ssl/t1_lib.c b/ssl/t1_lib.c
+index 9dd87dc4ac..0e79e9c934 100644
+--- a/ssl/t1_lib.c
++++ b/ssl/t1_lib.c
+@@ -2102,6 +2102,19 @@ static const uint16_t tls12_sigalgs[] = {
+     TLSEXT_SIGALG_rsa_pkcs1_sha384,
+     TLSEXT_SIGALG_rsa_pkcs1_sha512,
+ 
++    TLSEXT_SIGALG_slhdsa_sha2_128s,
++    TLSEXT_SIGALG_slhdsa_sha2_128f,
++    TLSEXT_SIGALG_slhdsa_sha2_192s,
++    TLSEXT_SIGALG_slhdsa_sha2_192f,
++    TLSEXT_SIGALG_slhdsa_sha2_256s,
++    TLSEXT_SIGALG_slhdsa_sha2_256f,
++    TLSEXT_SIGALG_slhdsa_shake_128s,
++    TLSEXT_SIGALG_slhdsa_shake_128f,
++    TLSEXT_SIGALG_slhdsa_shake_192s,
++    TLSEXT_SIGALG_slhdsa_shake_192f,
++    TLSEXT_SIGALG_slhdsa_shake_256s,
++    TLSEXT_SIGALG_slhdsa_shake_256f,
++
+     TLSEXT_SIGALG_ecdsa_sha224,
+     TLSEXT_SIGALG_ecdsa_sha1,
+ 
+diff --git a/ssl/t1_trce.c b/ssl/t1_trce.c
+index 4cafdba322..8de8d17d4f 100644
+--- a/ssl/t1_trce.c
++++ b/ssl/t1_trce.c
+@@ -621,6 +621,18 @@ static const ssl_trace_tbl ssl_sigalg_tbl[] = {
+     { 0x0904, "mldsa44" },
+     { 0x0905, "mldsa65" },
+     { 0x0906, "mldsa87" },
++    { 0x0911, "slhdsa_sha2_128s" },
++    { 0x0912, "slhdsa_sha2_128f" },
++    { 0x0913, "slhdsa_sha2_192s" },
++    { 0x0914, "slhdsa_sha2_192f" },
++    { 0x0915, "slhdsa_sha2_256s" },
++    { 0x0916, "slhdsa_sha2_256f" },
++    { 0x0917, "slhdsa_shake_128s" },
++    { 0x0918, "slhdsa_shake_128f" },
++    { 0x0919, "slhdsa_shake_192s" },
++    { 0x091a, "slhdsa_shake_192f" },
++    { 0x091b, "slhdsa_shake_256s" },
++    { 0x091c, "slhdsa_shake_256f" },
+     { 0x0708, "sm2sig_sm3" },
+ };
+ 
+diff --git a/test/recipes/75-test_quicapi_data/ssltraceref-zlib.txt b/test/recipes/75-test_quicapi_data/ssltraceref-zlib.txt
+index bd8d4c2f6c..1bce022109 100644
+--- a/test/recipes/75-test_quicapi_data/ssltraceref-zlib.txt
++++ b/test/recipes/75-test_quicapi_data/ssltraceref-zlib.txt
+@@ -55,6 +55,18 @@ Header:
+           rsa_pkcs1_sha256 (0x0401)
+           rsa_pkcs1_sha384 (0x0501)
+           rsa_pkcs1_sha512 (0x0601)
++          slhdsa_sha2_128s (0x0911)
++          slhdsa_sha2_128f (0x0912)
++          slhdsa_sha2_192s (0x0913)
++          slhdsa_sha2_192f (0x0914)
++          slhdsa_sha2_256s (0x0915)
++          slhdsa_sha2_256f (0x0916)
++          slhdsa_shake_128s (0x0917)
++          slhdsa_shake_128f (0x0918)
++          slhdsa_shake_192s (0x0919)
++          slhdsa_shake_192f (0x091a)
++          slhdsa_shake_256s (0x091b)
++          slhdsa_shake_256f (0x091c)
+           sm2sig_sm3 (0x0708)
+         extension_type=supported_versions(43), length=3
+           TLS 1.3 (772)
+diff --git a/test/recipes/75-test_quicapi_data/ssltraceref.txt b/test/recipes/75-test_quicapi_data/ssltraceref.txt
+index c453344987..300b4ca456 100644
+--- a/test/recipes/75-test_quicapi_data/ssltraceref.txt
++++ b/test/recipes/75-test_quicapi_data/ssltraceref.txt
+@@ -55,6 +55,18 @@ Header:
+           rsa_pkcs1_sha256 (0x0401)
+           rsa_pkcs1_sha384 (0x0501)
+           rsa_pkcs1_sha512 (0x0601)
++          slhdsa_sha2_128s (0x0911)
++          slhdsa_sha2_128f (0x0912)
++          slhdsa_sha2_192s (0x0913)
++          slhdsa_sha2_192f (0x0914)
++          slhdsa_sha2_256s (0x0915)
++          slhdsa_sha2_256f (0x0916)
++          slhdsa_shake_128s (0x0917)
++          slhdsa_shake_128f (0x0918)
++          slhdsa_shake_192s (0x0919)
++          slhdsa_shake_192f (0x091a)
++          slhdsa_shake_256s (0x091b)
++          slhdsa_shake_256f (0x091c)
+           sm2sig_sm3 (0x0708)
+         extension_type=supported_versions(43), length=3
+           TLS 1.3 (772)
+diff --git a/test/recipes/90-test_sslapi_data/ssltraceref-zlib.txt b/test/recipes/90-test_sslapi_data/ssltraceref-zlib.txt
+index 68d46c8b38..e6c193fa82 100644
+--- a/test/recipes/90-test_sslapi_data/ssltraceref-zlib.txt
++++ b/test/recipes/90-test_sslapi_data/ssltraceref-zlib.txt
+@@ -48,6 +48,18 @@ Header:
+           rsa_pkcs1_sha256 (0x0401)
+           rsa_pkcs1_sha384 (0x0501)
+           rsa_pkcs1_sha512 (0x0601)
++          slhdsa_sha2_128s (0x0911)
++          slhdsa_sha2_128f (0x0912)
++          slhdsa_sha2_192s (0x0913)
++          slhdsa_sha2_192f (0x0914)
++          slhdsa_sha2_256s (0x0915)
++          slhdsa_sha2_256f (0x0916)
++          slhdsa_shake_128s (0x0917)
++          slhdsa_shake_128f (0x0918)
++          slhdsa_shake_192s (0x0919)
++          slhdsa_shake_192f (0x091a)
++          slhdsa_shake_256s (0x091b)
++          slhdsa_shake_256f (0x091c)
+           sm2sig_sm3 (0x0708)
+         extension_type=supported_versions(43), length=3
+           TLS 1.3 (772)
+diff --git a/test/recipes/90-test_sslapi_data/ssltraceref.txt b/test/recipes/90-test_sslapi_data/ssltraceref.txt
+index d84d0e02fb..b5d8931e3d 100644
+--- a/test/recipes/90-test_sslapi_data/ssltraceref.txt
++++ b/test/recipes/90-test_sslapi_data/ssltraceref.txt
+@@ -48,6 +48,18 @@ Header:
+           rsa_pkcs1_sha256 (0x0401)
+           rsa_pkcs1_sha384 (0x0501)
+           rsa_pkcs1_sha512 (0x0601)
++          slhdsa_sha2_128s (0x0911)
++          slhdsa_sha2_128f (0x0912)
++          slhdsa_sha2_192s (0x0913)
++          slhdsa_sha2_192f (0x0914)
++          slhdsa_sha2_256s (0x0915)
++          slhdsa_sha2_256f (0x0916)
++          slhdsa_shake_128s (0x0917)
++          slhdsa_shake_128f (0x0918)
++          slhdsa_shake_192s (0x0919)
++          slhdsa_shake_192f (0x091a)
++          slhdsa_shake_256s (0x091b)
++          slhdsa_shake_256f (0x091c)
+           sm2sig_sm3 (0x0708)
+         extension_type=supported_versions(43), length=3
+           TLS 1.3 (772)
+-- 
+2.34.1
+

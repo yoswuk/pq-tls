@@ -1,0 +1,7 @@
+chain	group	code_path	repeat	passes	fails	avg_ms	median_ms	min_ms	max_ms
+slhdsa_shake_192f	mlkem512	c	100	100	0	1799.4	1802.5	1751	1844
+slhdsa_shake_192f	mlkem768	c	100	100	0	1801.7	1800.5	1750	1864
+slhdsa_shake_192f	mlkem1024	c	100	100	0	1806.4	1807.5	1762	1845
+slhdsa_shake_192f	ntruplus768	c	100	100	0	1800.7	1800.0	1751	1865
+slhdsa_shake_192f	ntruplus864	c	100	100	0	1798.7	1798.0	1752	1844
+slhdsa_shake_192f	ntruplus1152	c	100	100	0	1802.7	1801.5	1751	1883

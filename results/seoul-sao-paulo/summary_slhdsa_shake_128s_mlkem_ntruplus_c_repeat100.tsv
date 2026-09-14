@@ -1,0 +1,7 @@
+chain	group	code_path	repeat	passes	fails	avg_ms	median_ms	min_ms	max_ms
+slhdsa_shake_128s	mlkem512	c	100	100	0	1982.9	1982.5	1956	2014
+slhdsa_shake_128s	mlkem768	c	100	100	0	1981.8	1980.0	1957	2053
+slhdsa_shake_128s	mlkem1024	c	100	100	0	1981.2	1979.0	1956	2030
+slhdsa_shake_128s	ntruplus768	c	100	100	0	1984.3	1982.5	1954	2013
+slhdsa_shake_128s	ntruplus864	c	100	100	0	1986.1	1984.5	1960	2027
+slhdsa_shake_128s	ntruplus1152	c	100	100	0	1984.7	1983.5	1958	2020

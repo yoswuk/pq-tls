@@ -1,0 +1,13 @@
+diff --git a/apps/openssl.cnf b/apps/openssl.cnf
+index c5b7262078..c024f0b290 100644
+--- a/apps/openssl.cnf
++++ b/apps/openssl.cnf
+@@ -68,0 +69 @@
++ntruplus = ntruplus_sect
+@@ -82 +83,5 @@
+-# activate = 1
++activate = 1
++
++[ntruplus_sect]
++module = ${ENV::NTRUPLUS_PROVIDER_PATH}/ntruplus.so
++activate = 1

@@ -1,0 +1,7 @@
+chain	group	code_path	repeat	passes	fails	avg_ms	median_ms	min_ms	max_ms
+mldsa87	mlkem512	c	100	100	0	1203.0	1203.0	1167	1322
+mldsa87	mlkem768	c	100	100	0	1205.2	1200.5	1171	1606
+mldsa87	mlkem1024	c	100	100	0	1212.0	1207.5	1168	1778
+mldsa87	ntruplus768	c	100	100	0	1198.7	1197.5	1169	1233
+mldsa87	ntruplus864	c	100	100	0	1205.1	1203.0	1169	1391
+mldsa87	ntruplus1152	c	100	100	0	1206.2	1206.0	1171	1306
